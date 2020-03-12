@@ -32,8 +32,6 @@ app.post('/user/login', (req, res, err) => {//why it's only working when its hig
     });
     if (hasUser) {
         res.render('dashboard.ejs');
-        // console.log(name);
-        console.log('work');
         res.status(200).send();
     } else {
         res.render('err.ejs', { err: "Email and / or password is inncorrect" });
