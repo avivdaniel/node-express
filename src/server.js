@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser'); // for the username and pass
 const app = express();
+const { check, validationResult } = require('express-validator');
 const port = 3000;
 let users = [];
 let photos = [];
@@ -10,8 +11,10 @@ app.use(express.urlencoded({ extended: false }));
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
+app.use(express.json());
 app.use(bodyParser.json());
 app.use('/public', express.static('public'));
+
 
 
 app.get('/user/login', (req, res) => { //why it's only working when its hight orderd??
@@ -47,7 +50,25 @@ app.get('/user', (req, res) => {
 });
 
 
-app.post('/user', (req, res) => { //create user
+app.post('/user', [  //create user
+    check('name')
+        .isLength({ min: 2, max: 16 })
+        .withMessage('Must be at least 2 chars long and no more than 16')
+        .isAlpha()
+        .withMessage('Must be only alphabetical chars'),
+    check('email')
+        .isEmail()
+        .withMessage('Invalid Email address'),
+    check('password')
+        .isLength({ min: 6, max: 16 })
+        .withMessage('Must be at least 6 chars long and no more than 16')
+        .isAlphanumeric()
+        .withMessage('Must contain letters and numbers only')
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    }
     users.push({
         id: users.length + 1,
         name: req.body.name,
@@ -101,7 +122,17 @@ app.delete('/user/:id', (req, res) => {
 });
 
 
-app.put('/photo', (req, res) => {
+app.post('/photo', [
+    check('title')
+        .isLength({ min: 1 })
+        .withMessage('title must contain at least 1 char'),
+    check('filename')
+        .contains('.jpg')
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+    }
     photos.push({
         id: photos.length + 1,
         title: req.body.title,
